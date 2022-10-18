@@ -6,8 +6,8 @@ Created on Mon Oct 17 12:47:41 2022
 """
 
 # import dash-core, dash-html, dash io, bootstrap
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import html
+from dash import dcc
 from dash.dependencies import Input, Output
 
 from PIL import Image

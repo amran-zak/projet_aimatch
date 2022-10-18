@@ -6,14 +6,12 @@ Created on Mon Oct 17 12:49:36 2022
 """
 
 # Dash components, html, and dash tables
-import dash_core_components as dcc
-import dash_html_components as html
-import dash_table
+from dash import html
+from dash import dcc
 import pandas as pd
 import plotly.express as px
-from click import style
 
-import base64
+
 
 # Import Bootstrap components
 import dash_bootstrap_components as dbc

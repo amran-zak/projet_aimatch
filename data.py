@@ -12,8 +12,8 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.impute import KNNImputer
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import html
+from dash import dcc
 data = pd.read_csv("train.csv",sep=";")
 
 
