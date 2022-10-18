@@ -26,8 +26,10 @@ from app import app
 # Import server for deployment
 from app import srv as server
 # Import data from data.py file
-df=data.df_final
 
+
+
+df = data.data_final()
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
