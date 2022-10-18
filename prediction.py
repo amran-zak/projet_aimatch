@@ -15,6 +15,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import RFECV
 from imblearn.over_sampling import SMOTE
 from imblearn.over_sampling import SVMSMOTE
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+#from sklearn.preprocessing import Imputer
+
 ## Importation de la base de données
 df=pd.read_csv("C:\\Users\\USER\\Documents\\Master_SISE\\Projet\\Projet_python\\aimatch\\train.csv",sep=';')
 submiss=pd.read_csv("C:\\Users\\USER\\Documents\\Master_SISE\\Projet\\Projet_python\\aimatch\\submissions.csv",sep=";")
@@ -169,18 +176,22 @@ arbre.fit(Xtrain,Ytrain)
 imp = {"VarName":Xtrain.columns,"Importance":arbre.feature_importances_}
 tmpImp = pd.DataFrame(imp).sort_values(by="Importance",ascending=False)
 print(tmpImp)
+
+
 ## Sélection des variables importantes à mettre dans le modèle
 variables = tmpImp.loc[tmpImp['Importance'] > 0.03, 'VarName'].to_list()
 variables
 Xtrain=Xtrain[variables]
 Xtest=Xtest[variables]
+
+
 ## On reprends le modèle avec les variables importantes
-arbre = DecisionTreeClassifier(random_state=0)
-arbre.fit(Xtrain,Ytrain)
+arbre1 = DecisionTreeClassifier(random_state=0)
+arbre1.fit(Xtrain,Ytrain)
 ## Affichez l’arbre graphiquement
-plot_tree(arbre,feature_names=Xtrain.columns,filled=True)
+plot_tree(arbre1,feature_names=Xtrain.columns,filled=True)
 ## Prédiction
-y_pred=arbre.predict(Xtest)
+y_pred=arbre1.predict(Xtest)
 y_pred
 from sklearn.metrics import confusion_matrix
 mc = pd.DataFrame(confusion_matrix(Ytest,y_pred), 
@@ -243,25 +254,27 @@ parameters = {'max_depth' : np.arange(start = 1, stop = 10, step = 1) ,
               'min_samples_leaf' : np.arange(start = 5, stop = 250, step = 50),
               'min_samples_split' : np.arange(start = 10, stop = 500, step = 50)}
 
-modele_arbre = DecisionTreeClassifier()
+modele_arbre2 = DecisionTreeClassifier()
 f1 = make_scorer(f1_score , average='macro')
-modele_arbre = GridSearchCV(modele_arbre,
+modele_arbre2 = GridSearchCV(modele_arbre2,
                                   parameters,
                                   scoring = f1,
                                   verbose = 2, 
                                   cv = 5)
-modele_arbre.fit(Xtrain_res, Ytrain_res)
+modele_arbre2.fit(Xtrain_res, Ytrain_res)
 
 print("Voici les paramètres du meilleure modèle : " + 
-      str(modele_arbre.best_estimator_))
-print("Voici le "  + str(modele_arbre.scorer_) + 
-      " du meilleure modèle : " + str(modele_arbre.best_score_))
+      str(modele_arbre2.best_estimator_))
+print("Voici le "  + str(modele_arbre2.scorer_) + 
+      " du meilleure modèle : " + str(modele_arbre2.best_score_))
 
 ## Prédiction
-y_pred = modele_arbre.predict(Xtest)
+
+y_pred = modele_arbre2.predict(Xtest)
 ## Evaluation
 print('f1_score : ' + 
       str(f1_score(Ytest,y_pred, average='macro')))
+
 ## SBorderline SMOTE sur le même ensemble de données déséquilibré.
 oversample = SVMSMOTE()
 X, y = oversample.fit_resample(Xtrain, Ytrain)
@@ -269,20 +282,106 @@ parameters = {'max_depth' : np.arange(start = 1, stop = 10, step = 1) ,
               'min_samples_leaf' : np.arange(start = 5, stop = 250, step = 50),
               'min_samples_split' : np.arange(start = 10, stop = 500, step = 50)}
 
-modele_arbre = DecisionTreeClassifier()
+modele_arbre3 = DecisionTreeClassifier()
 f1 = make_scorer(f1_score , average='macro')
-modele_arbre = GridSearchCV(modele_arbre,
+modele_arbre3 = GridSearchCV(modele_arbre3,
                                   parameters,
                                   scoring = f1,
                                   verbose = 2, 
                                   cv = 5)
-modele_arbre.fit(X, y)
+modele_arbre3.fit(X, y)
 print("Voici les paramètres du meilleure modèle : " + 
-      str(modele_arbre.best_estimator_))
-print("Voici le "  + str(modele_arbre.scorer_) + 
-      " du meilleure modèle : " + str(modele_arbre.best_score_))
+      str(modele_arbre3.best_estimator_))
+print("Voici le "  + str(modele_arbre3.scorer_) + 
+      " du meilleure modèle : " + str(modele_arbre3.best_score_))
+
+
 ## Prédiction
-y_pred = modele_arbre.predict(Xtest)
+y_pred = modele_arbre3.predict(Xtest)
 ## Evaluation
 print('f1_score : ' + 
       str(f1_score(Ytest,y_pred, average='macro')))
+
+
+
+
+
+
+## Modélisation avec les K plus proches voisins
+neigboars=np.arange(1,20)
+
+train_accuracy=[]
+test_accuracy=[]
+
+for i,k in enumerate(neigboars):
+    knn=KNeighborsClassifier(n_neighbors=k)
+    #fitting
+    knn.fit(Xtrain_res,Ytrain_res)
+    
+    train_accuracy.append(knn.score(Xtrain_res,Ytrain_res))
+    test_accuracy.append(knn.score(Xtest,Ytest))
+
+   #visualization
+
+plt.figure(figsize=[15,10])
+plt.plot(neigboars,test_accuracy,label="Test accuracy")
+plt.plot(neigboars,train_accuracy,label="Train accuracy")
+plt.legend()
+
+plt.title("ACCURACY RATE")
+plt.xlabel("Number of Neighboars")
+plt.ylabel("Accuracy")
+plt.xticks(neigboars)
+plt.show()
+
+#Trouvons la meilleure précision pour laquelle la valeur de k
+print("Best Accuracy is {} with k= {}".format(np.max(test_accuracy),
+1+test_accuracy.index(np.max(test_accuracy))))
+## On refait le modèle avec K =2
+knn = KNeighborsClassifier(n_neighbors=2)
+#Train the model using the training sets
+knn.fit(Xtrain_res, Ytrain_res)
+
+#Predict the response for test dataset
+y_pred4 = knn.predict(Xtest)
+## Evaluation
+print('f1_score : ' + 
+      str(f1_score(Ytest,y_pred4, average='macro')))
+
+## Compétition kaggle
+## Traitement sur la base submission
+
+## Scinder la base en quanti et quali pour le tyraitement des données manquantes
+dfqusuantii=submiss.select_dtypes(exclude=['object'])
+dfqualif=submiss.select_dtypes(include=['object'])
+dfqusuantii=dfqusuantii.drop(['expnum'], axis=1)
+print(dfqusuantii)
+## correction des données manquantes par les K plus proches voisins
+imputer = KNNImputer(n_neighbors=3)
+dff= pd.DataFrame(imputer.fit_transform(dfqusuantii),columns=dfqusuantii.columns)
+dff.isna().any()
+## Correction des données manquantes par le mode
+for i in dfqualif.columns :
+  dfqualif[i].fillna(dfqualif[i].mode()[0], inplace=True)
+print(dfqualif)
+dfqualif.isna().any()
+## fusion des deux bases 
+sumiss_final= pd.concat([dff,dfqualif],axis=1)
+## verification si données manquantes
+print(sumiss_final.isnull().sum())
+sumiss_final=sumiss_final[variables]
+sumiss_final.replace(",","",regex=True,inplace=True)
+print(sumiss_final)
+## Predire sur les données submiss
+## Prédiction
+#y_pred2 = modele_arbre2.predict(Xtest)
+y_pred_submiss = modele_arbre2.predict(sumiss_final)
+y_pred_sumiss=pd.DataFrame(y_pred_submiss)
+y_pred_sumiss.describe()
+y_pred_sumiss.to_csv("scores.csv",",")
+
+
+## Interpretation du modèle: l'influence des variables sur le meilleur modèle
+imp = {"VarName":Xtrain.columns,"Importance":modele_arbre2.best_estimator_.feature_importances_}
+tmpImp = pd.DataFrame(imp).sort_values(by="Importance",ascending=False)
+print(tmpImp)
