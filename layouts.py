@@ -20,7 +20,7 @@ import numpy as np
 import data
 
 # Import data from data.py file
-df = data.df_final
+df = data.data_final()
 df.drop(['order','positin1','round','wave','dec_o','position'], axis=1, inplace=True)
 
 
